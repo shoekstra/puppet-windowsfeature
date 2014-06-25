@@ -4,7 +4,8 @@ define windowsfeature (
     $feature_name = $title,
     $installmanagementtools = false,
     $installsubfeatures = false,
-    $restart = false
+    $restart = false,
+    $source = undef
 ) {
 
   validate_re($ensure, '^(present|absent)$', 'valid values for ensure are \'present\' or \'absent\'')
@@ -32,9 +33,20 @@ define windowsfeature (
   # Windows 2008 R2 and newer required http://technet.microsoft.com/en-us/library/ee662309.aspx
   if $::kernelversion !~ /^(6\.1|6\.2|6\.3)/ { fail ("${module_name} requires Windows 2008 R2 or newer") }
 
+  # Windows 2008 R2 does not support -Source parameter http://msdn.microsoft.com/en-us/library/ee662309.aspx
+  if $::kernelversion =~ /^6\.1/ and $source { fail ("source parameter not supported on this version of Windows") }
+
   # from Windows 2012 'Add-WindowsFeature' has been replaced with 'Install-WindowsFeature' http://technet.microsoft.com/en-us/library/ee662309.aspx
   if ($ensure == 'present') {
-    if $::kernelversion =~ /^(6.1)/ { $command = 'Add-WindowsFeature' } else { $command = 'Install-WindowsFeature' }
+    if $::kernelversion =~ /^(6.1)/ {
+      $command = 'Add-WindowsFeature'
+    } else {
+      if $source {
+        $command = "Install-WindowsFeature -Source ${source}"
+      } else {
+        $command = 'Install-WindowsFeature'
+      }
+    }
 
     exec { "add-feature-${title}":
       command   => "Import-Module ServerManager; ${command} ${features} ${_installmanagementtools} ${_installsubfeatures} -Restart:$${_restart}",

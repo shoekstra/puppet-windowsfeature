@@ -48,32 +48,25 @@ describe 'windowsfeature', :type => :define do
             })}
           end
 
-          context '$restart => true' do
-            let(:params) { { :restart => true } }
-            it { should contain_exec('add-feature-NET-HTTP-Activation').with({
-              'command'  => 'Import-Module ServerManager; Add-WindowsFeature NET-HTTP-Activation   -Restart:$true',
-              'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
-              'provider' => 'powershell'
-            })}
+          [ true, false ].each do |restart|
+            context "$restart => #{restart}" do
+              let(:params) { { :restart => restart } }
+              it { should contain_exec('add-feature-NET-HTTP-Activation').with({
+                "command"  => "Import-Module ServerManager; Add-WindowsFeature NET-HTTP-Activation   -Restart:$#{restart}",
+                'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
+                'provider' => 'powershell'
+              })}
+            end
           end
+        end
 
-          context '$restart => false' do
-            let(:params) { { :restart => false } }
-            it { should contain_exec('add-feature-NET-HTTP-Activation').with({
-              'command'  => 'Import-Module ServerManager; Add-WindowsFeature NET-HTTP-Activation   -Restart:$false',
-              'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
-              'provider' => 'powershell'
-            })}
-          end
-
-          context 'when removing a windows feature' do
-            let(:params) {{ :ensure => 'absent' }}
-            it { should contain_exec('remove-feature-NET-HTTP-Activation').with({
-              'command'  => "Import-Module ServerManager; Remove-WindowsFeature NET-HTTP-Activation -Restart:$false",
-              'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'true'}).count -eq 0) { exit 1 }",
-              'provider' => 'powershell'
-            })}
-          end
+        context 'when removing a windows feature' do
+          let(:params) {{ :ensure => 'absent' }}
+          it { should contain_exec('remove-feature-NET-HTTP-Activation').with({
+            'command'  => "Import-Module ServerManager; Remove-WindowsFeature NET-HTTP-Activation -Restart:$false",
+            'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'true'}).count -eq 0) { exit 1 }",
+            'provider' => 'powershell'
+          })}
         end
       end
     end
@@ -110,32 +103,23 @@ describe 'windowsfeature', :type => :define do
             })}
           end
 
-          context '$restart => true' do
-            let(:params) { { :restart => true } }
-
-            it { should contain_exec('add-feature-NET-HTTP-Activation').with({
-              'command'  => 'Import-Module ServerManager; Install-WindowsFeature NET-HTTP-Activation   -Restart:$true',
-              'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
-              'provider' => 'powershell'
-            })}
+          [ true, false ].each do |restart|
+            context "$restart => #{restart}" do
+              let(:params) { { :restart => restart } }
+              it { should contain_exec('add-feature-NET-HTTP-Activation').with({
+                "command"  => "Import-Module ServerManager; Install-WindowsFeature NET-HTTP-Activation   -Restart:$#{restart}",
+                'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
+                'provider' => 'powershell'
+              })}
+            end
           end
 
-          context '$restart => false' do
-            let(:params) { { :restart => false } }
+          context '$source => \\\\server2\\winsxs' do
+            let(:params) { { :source => '\\\\server2\\winsxs' } }
 
             it { should contain_exec('add-feature-NET-HTTP-Activation').with({
-              'command'  => 'Import-Module ServerManager; Install-WindowsFeature NET-HTTP-Activation   -Restart:$false',
+              'command'  => "Import-Module ServerManager; Install-WindowsFeature -Source \\\\server2\\winsxs NET-HTTP-Activation   -Restart:\$false",
               'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'false'}).count -eq 0) { exit 1 }",
-              'provider' => 'powershell'
-            })}
-          end
-
-          context 'when removing a windows feature' do
-            let(:params) {{ :ensure => 'absent' }}
-
-            it { should contain_exec('remove-feature-NET-HTTP-Activation').with({
-              'command'  => "Import-Module ServerManager; Remove-WindowsFeature NET-HTTP-Activation -Restart:$false",
-              'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'true'}).count -eq 0) { exit 1 }",
               'provider' => 'powershell'
             })}
           end
@@ -149,6 +133,16 @@ describe 'windowsfeature', :type => :define do
               'provider' => 'powershell'
             })}
           end
+        end
+
+        context 'when removing a windows feature' do
+          let(:params) {{ :ensure => 'absent' }}
+
+          it { should contain_exec('remove-feature-NET-HTTP-Activation').with({
+            'command'  => "Import-Module ServerManager; Remove-WindowsFeature NET-HTTP-Activation -Restart:$false",
+            'onlyif'   => "Import-Module ServerManager; if (@(Get-WindowsFeature NET-HTTP-Activation | ?{$_.Installed -match 'true'}).count -eq 0) { exit 1 }",
+            'provider' => 'powershell'
+          })}
         end
       end
     end
